@@ -1,83 +1,79 @@
-# 🏗 Scaffold-ETH 2
+# Automated Market Maker
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+A course project for NYU FRE-GY 6931 Blockchain and Cryptocurrency: a WETH/USDX automated market maker with wallet interaction, liquidity analysis, paper trading, and backtesting.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+## Current status
 
-> [!NOTE]
-> 🤖 Scaffold-ETH 2 is AI-ready! It has everything agents need to build on Ethereum. Check `.agents/`, `.claude/`, `.opencode` or `.cursor/` for more info.
+The repository has been initialized from the official **Scaffold-ETH 2 Hardhat template**, generated with `create-eth@2.0.23`. The first commit contains the unmodified generated template. Project setup and documentation follow separately.
 
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, Viem, and Typescript.
+The application currently contains the starter `YourContract` example, wallet controls, Debug Contracts, and a local block explorer. The AMM, USDX, LP token, oracle rules, trading interface, and financial models are planned work. There is no project deployment on Sepolia or public website yet.
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+## Quick start
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+Requirements: Git, Node.js (24 LTS recommended; see `.nvmrc`), and a browser. MetaMask is needed when testing the external-wallet flow. The template also supplies a local development wallet.
 
-## Requirements
-
-Before you begin, you need to install the following tools:
-
-- [Node (>= v20.18.3)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
-
-## Quickstart
-
-To get started with Scaffold-ETH 2, follow the steps below:
-
-1. Install dependencies if it was skipped in CLI:
-
-```
-cd my-dapp-example
-yarn install
+```bash
+git clone https://github.com/SunChuyun/Automated-Market-Maker.git
+cd Automated-Market-Maker
+./yarn install --immutable
 ```
 
-2. Run a local network in the first terminal:
+The executable `./yarn` uses the repository's bundled Yarn 4.13.0, so a global Yarn installation is optional. On Windows, use `node .yarn/releases/yarn-4.13.0.cjs` in place of `./yarn`. An existing Corepack/Yarn installation may also run the normal `yarn` commands.
 
+Run the following from the project root in separate terminals, in this order:
+
+| Terminal | Command         | Purpose                                                                      |
+| -------- | --------------- | ---------------------------------------------------------------------------- |
+| A        | `./yarn chain`  | Start the local blockchain; leave it running.                                |
+| B        | `./yarn deploy` | Compile and deploy the example, then generate frontend contract information. |
+| C        | `./yarn start`  | Start the website; leave it running.                                         |
+
+Open <http://localhost:3000>. On **Debug Contracts**, read `greeting` and try `setGreeting` to learn the read/write flow. These are local example operations, not AMM trades.
+
+## Repository structure
+
+| Path                        | Purpose                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| `packages/hardhat/`         | Solidity contracts, contract tests, deployment scripts, and network configuration. |
+| `packages/nextjs/`          | Website pages, components, wallet integration, and contract interaction.           |
+| `docs/analysis/`            | Financial notebooks, data, and results; submission reports belong in `docs/`.      |
+| `team-guide/`               | Team collaboration procedures and working agreements.                             |
+| `.github/workflows/`        | Automated checks for pushes and pull requests.                                     |
+| `package.json`, `yarn.lock` | Shared commands, dependency declarations, and locked versions.                     |
+
+## Validation commands
+
+```bash
+./yarn compile
+./yarn test
+./yarn lint
+./yarn hardhat:check-types
+./yarn next:check-types
+./yarn next:build
 ```
-yarn chain
-```
 
-This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/hardhat/hardhat.config.ts`.
+Deployment-helper dependencies are pinned to a compatible Rocketh family. Keep `yarn.lock` under version control and review dependency changes with the team. The CI workflow checks the starter contracts and types; it has not run remotely until this repository is pushed to GitHub.
 
-3. On a second terminal, deploy the test contract:
+## Collaboration and development
 
-```
-yarn deploy
-```
+See the [team guide](team-guide/README.md) for responsibilities, branches, pull requests, and daily Git commands.
 
-This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
+Keep source code, comments, interfaces, and repository documentation in English. Store private configuration in local environment files. Do not commit private keys, seed phrases, dependency installations, build output, or non-public course handouts.
 
-4. On a third terminal, start your NextJS app:
+## Later deployment
 
-```
-yarn start
-```
+Contract deployment and website deployment are separate steps:
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+- Contracts: prepare the test account and RPC configuration, deploy to Sepolia, and verify the source on Etherscan.
+- Website: configure the frontend for Sepolia and the deployed contracts, pass the production build, and publish the Next.js application to a hosting provider such as Vercel.
 
-Run smart contract test with `yarn hardhat:test`
+Deployment commands and release coordination are described in the team guide. Creating a GitHub repository alone does not publish the website.
 
-- Edit your smart contracts in `packages/hardhat/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/hardhat/deploy`
+## References and license
 
+- [Scaffold-ETH 2 documentation](https://docs.scaffoldeth.io/)
+- [Hardhat documentation](https://hardhat.org/docs/)
+- [Frontend deployment](https://docs.scaffoldeth.io/deploying/deploy-nextjs-app)
+- [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts/)
 
-## Documentation
-
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
-
-To know more about its features, check out our [website](https://scaffoldeth.io).
-
-## Contributing to Scaffold-ETH 2
-
-We welcome contributions to Scaffold-ETH 2!
-
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+Based on Scaffold-ETH 2. The upstream MIT license is retained in [LICENCE](LICENCE).
