@@ -1,103 +1,105 @@
 "use client";
 
-import React, { useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { hardhat } from "viem/chains";
-import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
-import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
-import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useSwitchChain } from "wagmi";
+import { ArrowUpRightIcon, WalletIcon } from "@heroicons/react/24/outline";
+import { AppearanceControl } from "~~/components/AppearanceControl";
+import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 
-type HeaderMenuLink = {
-  label: string;
-  href: string;
-  icon?: React.ReactNode;
-};
-
-export const menuLinks: HeaderMenuLink[] = [
-  {
-    label: "Home",
-    href: "/",
-  },
-  {
-    label: "Debug Contracts",
-    href: "/debug",
-    icon: <BugAntIcon className="h-4 w-4" />,
-  },
+const links = [
+  { label: "Swap", href: "/" },
+  { label: "Explore", href: "/explore" },
+  { label: "Earn", href: "/earn" },
+  { label: "Portfolio", href: "/portfolio" },
+];
+const moreLinks = [
+  { label: "Simulate", href: "/simulate" },
+  { label: "Backtest", href: "/backtest" },
 ];
 
-export const HeaderMenuLinks = () => {
-  const pathname = usePathname();
-
-  return (
-    <>
-      {menuLinks.map(({ label, href, icon }) => {
-        const isActive = pathname === href;
-        return (
-          <li key={href} className="h-full">
-            <Link
-              href={href}
-              passHref
-              className={`${
-                isActive ? "bg-base-300" : ""
-              } hover:bg-base-300 focus:!bg-base-300 h-full px-4 text-sm gap-2 flex items-center whitespace-nowrap`}
-            >
-              {icon}
-              <span>{label}</span>
-            </Link>
-          </li>
-        );
-      })}
-    </>
-  );
-};
-
-/**
- * Site header
- */
 export const Header = () => {
+  const pathname = usePathname();
   const { targetNetwork } = useTargetNetwork();
-  const isLocalNetwork = targetNetwork.id === hardhat.id;
-
-  const burgerMenuRef = useRef<HTMLDetailsElement>(null);
-  useOutsideClick(burgerMenuRef, () => {
-    burgerMenuRef?.current?.removeAttribute("open");
-  });
-
+  const { switchChain, isPending } = useSwitchChain();
   return (
-    <div className="sticky lg:static top-0 navbar bg-base-100 min-h-16 shrink-0 justify-between z-20 border-b-2 border-base-300 p-0 sm:px-2">
-      <div className="navbar-start w-auto self-stretch">
-        <details className="dropdown" ref={burgerMenuRef}>
-          <summary className="ml-1 btn btn-ghost lg:hidden hover:bg-transparent">
-            <Bars3Icon className="h-1/2" />
-          </summary>
-          <ul
-            className="menu menu-compact dropdown-content mt-3 p-2 shadow-lg bg-base-100 w-52"
-            onClick={() => {
-              burgerMenuRef?.current?.removeAttribute("open");
-            }}
-          >
-            <HeaderMenuLinks />
-          </ul>
-        </details>
-        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
-          <div className="flex relative w-10 h-10">
-            <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold leading-tight">Scaffold-ETH</span>
-            <span className="text-xs">Ethereum dev stack</span>
-          </div>
+    <header className="studio-header">
+      <div className="navbar studio-navbar">
+        <Link href="/" className="studio-brand" aria-label="AMM Studio home">
+          <span className="brand-mark">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span>
+            AMM<span className="brand-light"> Studio</span>
+          </span>
         </Link>
-        <ul className="hidden lg:flex lg:flex-nowrap h-full m-0 p-0 list-none">
-          <HeaderMenuLinks />
-        </ul>
+        <nav className="studio-nav" aria-label="Main navigation">
+          {links.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={
+                (link.href === "/" ? pathname === "/" : pathname.startsWith(link.href)) ? "page" : undefined
+              }
+              className={(link.href === "/" ? pathname === "/" : pathname.startsWith(link.href)) ? "active" : ""}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <details className="dropdown more-navigation" key={pathname}>
+            <summary
+              role="button"
+              aria-label="More"
+              className={moreLinks.some(l => pathname.startsWith(l.href)) ? "active" : ""}
+            >
+              More <span aria-hidden="true">⌄</span>
+            </summary>
+            <ul className="menu dropdown-content">
+              {moreLinks.map(l => (
+                <li key={l.href}>
+                  <Link href={l.href} aria-label={l.label}>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </nav>
+        <div className="header-actions">
+          <AppearanceControl />
+          <span className="network-label">
+            <span className="status-dot" />
+            {targetNetwork.id === 31337 ? "Local devnet" : targetNetwork.name}
+          </span>
+          <ConnectButton.Custom>
+            {({ account, chain, mounted, openConnectModal, openAccountModal }) => {
+              const connected = mounted && account && chain;
+              const wrongNetwork = connected && chain.id !== targetNetwork.id;
+              return (
+                <button
+                  type="button"
+                  className="btn wallet-button"
+                  disabled={isPending}
+                  onClick={() =>
+                    wrongNetwork
+                      ? switchChain({ chainId: targetNetwork.id })
+                      : connected
+                        ? openAccountModal()
+                        : openConnectModal()
+                  }
+                >
+                  <WalletIcon className="h-4 w-4" />
+                  {wrongNetwork ? "Switch network" : connected ? account.displayName : "Connect wallet"}
+                  <ArrowUpRightIcon className="h-3.5 w-3.5" />
+                </button>
+              );
+            }}
+          </ConnectButton.Custom>
+        </div>
       </div>
-      <div className="navbar-end grow mr-4">
-        <RainbowKitCustomConnectButton />
-        {isLocalNetwork && <FaucetButton />}
-      </div>
-    </div>
+    </header>
   );
 };
