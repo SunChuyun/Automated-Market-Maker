@@ -1,6 +1,7 @@
 "use client";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { ChartRange, CryptoAsset, TokenAboutData, TokenChartData, TokenMarkets } from "~~/utils/explore/data";
+import type { MarketOrder } from "~~/utils/explore/pagination";
 
 async function read<T>(url: string): Promise<T> {
   const r = await fetch(url, { cache: "no-store" });
@@ -31,12 +32,14 @@ export const useTokenAbout = (id: string) =>
     retry: 1,
   });
 
-export const useInfiniteTokenMarkets = () =>
+export const useInfiniteTokenMarkets = (order: MarketOrder) =>
   useInfiniteQuery({
-    queryKey: ["crypto-market-pages"],
+    queryKey: ["crypto-market-pages", order],
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
-      read<TokenMarkets>(`/api/explore/tokens${pageParam ? `?cursor=${encodeURIComponent(pageParam)}` : ""}`),
+      read<TokenMarkets>(
+        `/api/explore/tokens?order=${order}${pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ""}`,
+      ),
     getNextPageParam: last => last.nextCursor ?? undefined,
     staleTime: 60_000,
     refetchInterval: 60_000,

@@ -15,7 +15,7 @@ const links = [
   { label: "Portfolio", href: "/portfolio" },
 ];
 const moreLinks = [
-  { label: "Simulate", href: "/simulate" },
+  { label: "Simulation", href: "/simulate" },
   { label: "Backtest", href: "/backtest" },
 ];
 

@@ -8,17 +8,17 @@ The repository has been initialized from the official **Scaffold-ETH 2 Hardhat t
 
 The frontend now includes an English UI preview with Swap, Explore, token detail, Earn, Portfolio, and research tools, wallet controls, live external ETH/USD references, virtual trading, and a reference-market DCA backtest. The starter `YourContract`, Debug Contracts, and local explorer remain available as development tools. The AMM, USDX, LP token, oracle rules, and Sepolia integration are still pending. There is no public website deployment yet.
 
-| Route                                  | Current behavior                                                                                          |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `/`                                    | Focused WETH/USDX swap preview; fee, impact, slippage settings and expandable risk details.               |
-| `/explore`                             | Crypto markets with search, sorting of loaded assets, and cursor-based batches of 100. |
-| `/explore/[id]`                        | Real price charts (1H/1D/1W/1M/1Y), market statistics, About/resources and a trade-panel preview.         |
-| `/earn`                                | WETH/USDX liquidity preview and an explicitly illustrative fee-APR calculator. `/pools` redirects here.   |
-| `/simulate`, `/backtest`, `/portfolio` | Practice/research tools under More; Portfolio is in the primary navigation.                                    |
+| Route                                  | Current behavior                                                                                                     |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/`                                    | Focused WETH/USDX swap preview; fee, impact, slippage settings and expandable risk details.                          |
+| `/explore`                             | Tokens table; 24H volume ordering across the provider universe, scoped column sorting, and 100-token scroll batches. |
+| `/explore/[id]`                        | Real price charts (1H/1D/1W/1M/1Y), market statistics, About/resources and a trade-panel preview.                    |
+| `/earn`                                | WETH/USDX liquidity preview and an explicitly illustrative fee-APR calculator. `/pools` redirects here.              |
+| `/simulate`, `/backtest`, `/portfolio` | Simulation and Backtest under More; Portfolio in the primary navigation with the connected wallet name.              |
 
 Real swaps, limit orders and liquidity actions are disabled until the corresponding contracts or execution services are connected. Assets in Explore are for market research; the planned pool supports WETH/USDX only. Example amounts are not on-chain balances. The reference backtest omits gas, spread and pool price impact; it does not replace the final pool model or Sepolia reconciliation.
 
-System, light and dark appearance settings are implemented. Browser verification of themes, infinite scrolling, and MetaMask is in progress. Global market sorting and additional volume periods are planned; current sorting applies to loaded assets.
+System, Light and Dark settings persist across reloads. Chrome verification confirmed an existing MetaMask connection, readable light/dark surfaces, and 100 → 200 → 300 distinct rows through bottom-triggered scrolling. No wallet signature or transaction was performed. Project-level About navigation has been removed; token-specific About information remains.
 
 ## Quick start
 
@@ -59,21 +59,29 @@ Open <http://localhost:3000>. On **Debug Contracts**, read `greeting` and try `s
 
 Next.js route handlers fetch public data server-side:
 
-- `packages/nextjs/app/api/explore/`: CoinGecko crypto list, chart and token-resource endpoints. The list fetches a larger market-cap-ranked universe, excludes known tokenized commodity/fund and stock/ETF instruments, and returns up to 100 assets per cursor response. The browser appends another batch at the end of the loaded list. This filter is a curated prototype scope, not a comprehensive asset-classification service.
-- CoinGecko list polling/cache: one minute. Chart cache: five minutes. Resource cache: one day. Keyless access was verified locally; IP-based rate limits apply. An optional server-only `COINGECKO_DEMO_API_KEY` can be configured later. Do not put it in a `NEXT_PUBLIC_` variable.
-- Table mini-charts cover seven days; token detail charts provide separate time ranges. Source retrieval time and provider timestamps are preserved. Cached responses can be marked delayed during a provider outage; no fabricated prices are substituted.
+- `packages/nextjs/app/api/explore/`: CoinGecko token list, chart and token-resource endpoints. The Tokens table defaults to provider market-cap order. Clicking **Volume (24H)** requests provider-wide ascending/descending volume order before pagination. **Price, 1H, 1D and FDV** sort only the loaded assets; a visible notice identifies that scope. Searching also covers loaded tokens. These controls are not a full-universe price/FDV ranking service.
+- Each full scroll response contains **100 distinct tokens**. The server preserves buffered source rows and already-seen IDs in an opaque pagination session; the client appends at the bottom without prefetching above it. Only the last response may contain fewer than 100 when the source is exhausted. Rank numbers are omitted: a provider rank such as 110 is not the number of displayed rows, particularly after filtering.
+- The list excludes known tokenized commodity/fund and stock/ETF instruments. This is a curated prototype filter, not a comprehensive asset-classification service.
+- List polling and upstream cache: one minute while the page is active. Refresh updates query data in place. This is periodic REST polling, not a streaming exchange feed. Charts cache for five minutes; token resources for one day. Provider failures show an unavailable or delayed state rather than fabricated prices. Retrieval/provider timestamps stay in the data and are not displayed as interface text.
+- **24H is the only supported volume period.** The current endpoint does not provide true 1H/1W/1M/1Y/all-time volumes, so the UI does not offer those choices. The historical API's rolling 24-hour volume observations must not be summed to create those periods.
+- Keyless access was verified locally; IP-based limits apply. An optional server-only `COINGECKO_DEMO_API_KEY` can be configured later. Do not put it in a `NEXT_PUBLIC_` variable. The [Demo plan](https://www.coingecko.com/en/api/pricing) currently lists 100 calls/minute and 10,000 calls/month with attribution. A single continuously active upstream request per minute is about 43,200 calls per 30 days, before charts, additional source pages or ordering changes. The free plan is suitable for limited demonstrations, not an unlimited always-on service.
+- Provider source requests return up to 250 rows per call; a 100-row browser batch need not require 100 individual requests. Fetching every token separately on every refresh would waste quota. The [provider's order enum](https://docs.coingecko.com/reference/coins-markets) supports market-cap, volume and ID order; global price/change/FDV sorting would require a complete cached market snapshot or a different data service.
 - `packages/nextjs/app/api/market/`: Kraken/Coinbase ETH reference endpoints retained for the research/account tools.
 
 Pool volume, liquidity, daily LP fees and live APR are unavailable until contract/event integration. The Earn scenario APR is daily volume × LP fee × 365 / pool value, without compounding, IL or gas; it is not a live return.
 
-The separate ETH reference hook polls its price every 30 seconds when a component uses it. Price responses are cached for 20 seconds; history for five minutes. The UI reports retrieval time, not an exchange-generated quote timestamp.
+The separate ETH reference hook polls its price every 30 seconds when a component uses it. Price responses are cached for 20 seconds; history for five minutes. The interface does not display retrieval timestamps; chart labels still identify the historical candle time.
 
 - Primary price and history: [Kraken public market data](https://docs.kraken.com/api-reference/market-data/get-ticker-information), ETH/USD and up to approximately 30 days of hourly candles. The unfinished candle is excluded.
 - Backup price: [Coinbase public spot price](https://docs.cdp.coinbase.com/coinbase-app/track-apis/prices). History has no fallback; failures show an unavailable state.
 - No market-data key is needed for these endpoints. Public rate limits and provider terms still apply. The external reference is separate from the pool's execution quote and future Chainlink/TWAP checks.
 - USDX has no redemption promise or USD peg. Any USDX-to-USD equivalence in scenarios is explicitly a modeling assumption.
 
-Deploy this version to a host that runs Next.js server routes, such as Vercel or a Node.js host. A static-only export cannot serve these market endpoints.
+The website and these API routes are one Next.js application: deploy both to a **single persistent Node.js process** for this course preview. Static hosting alone cannot run the market endpoints. The current pagination sessions and caches live in process memory, expire after 30 minutes, and reset when the process restarts. Refresh starts a new list. The cursor route intentionally disables CDN response caching.
+
+For Vercel/serverless or multiple application instances, move sessions and provider caches to shared Redis or a database before relying on infinite pagination; otherwise a later request may reach an instance that does not recognize its cursor. Add application-level request limits before public traffic. A domain and frontend hosting do not remove upstream data limits.
+
+Our own pool analytics are a separate future data path: index confirmed `Swap`/liquidity events from the pool's deployment block, deduplicate transaction hash plus log index, store the processed block cursor, handle reorganizations, and aggregate volume and fees in persistent storage. This yields our pool's history since deployment, not market-wide or pre-deployment history. Uniswap-style analytics similarly use protocol-specific indexed data; [its subgraph entities](https://developers.uniswap.org/docs/ecosystem/subgraphs/concepts/v3/entities) include cumulative and hourly/daily metrics. Those values must not be relabeled as CoinGecko market-wide volumes.
 
 ## Validation commands
 
@@ -84,10 +92,10 @@ Deploy this version to a host that runs Next.js server routes, such as Vercel or
 ./yarn hardhat:check-types
 ./yarn next:check-types
 ./yarn next:build
-./yarn workspace @se-2/nextjs exec node --experimental-strip-types --test utils/amm/model.test.mjs utils/explore/data.test.mjs
+./yarn workspace @se-2/nextjs exec node --experimental-strip-types --test utils/amm/model.test.mjs utils/explore/data.test.mjs utils/explore/pagination.test.mjs
 ```
 
-Deployment-helper dependencies are pinned to a compatible Rocketh family. Keep `yarn.lock` under version control and review dependency changes with the team. The CI workflow checks the starter contracts and types; it has not run remotely until this repository is pushed to GitHub.
+Deployment-helper dependencies are pinned to a compatible Rocketh family. Keep `yarn.lock` under version control and review dependency changes with the team. The CI workflow checks the starter contracts and types. Local verification does not imply that remote CI has passed.
 
 ## Collaboration and development
 

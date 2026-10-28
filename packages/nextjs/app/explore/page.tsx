@@ -2,85 +2,80 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { ArrowDownIcon, ArrowPathIcon, ArrowUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { AssetIcon, Change, DataError, PoolMetrics, Sparkline } from "~~/components/explore/MarketUI";
 import { useInfiniteTokenMarkets } from "~~/hooks/useExplore";
 import { compactUsd, tokenPrice } from "~~/utils/explore/data";
+import type { MarketOrder } from "~~/utils/explore/pagination";
+import { type MarketSort, type SortDirection, compareAssets } from "~~/utils/explore/sort";
 
 export default function ExplorePage() {
-  const markets = useInfiniteTokenMarkets();
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("cap");
-
+  const [sort, setSort] = useState<MarketSort>("marketCap");
+  const [direction, setDirection] = useState<SortDirection>("desc");
+  const order: MarketOrder = sort === "volume24h" ? `volume_${direction}` : "market_cap_desc";
+  const markets = useInfiniteTokenMarkets(order);
   const sentinel = useRef<HTMLDivElement>(null);
+  const locallySorted = sort !== "volume24h" && sort !== "marketCap";
   const assets = Array.from(
     new Map((markets.data?.pages.flatMap(page => page.assets) ?? []).map(asset => [asset.id, asset])).values(),
-  )
-    .filter(a => `${a.name} ${a.symbol}`.toLowerCase().includes(search.toLowerCase()))
-    .toSorted((a, b) =>
-      sort === "volume"
-        ? (b.volume24h ?? -1) - (a.volume24h ?? -1)
-        : sort === "change"
-          ? (b.change24h ?? -Infinity) - (a.change24h ?? -Infinity)
-          : (b.marketCap ?? -1) - (a.marketCap ?? -1),
-    );
+  ).filter(a => `${a.name} ${a.symbol}`.toLowerCase().includes(search.toLowerCase()));
+  if (locallySorted) assets.sort((a, b) => compareAssets(a, b, sort, direction));
+
   const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage, isFetching } = markets;
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetching && !isFetchNextPageError && !search)
-          void fetchNextPage();
+          void fetchNextPage({ cancelRefetch: false });
       },
-      { rootMargin: "300px" },
+      { rootMargin: "0px", threshold: 0.1 },
     );
     if (sentinel.current) observer.observe(sentinel.current);
     return () => observer.disconnect();
   }, [hasNextPage, isFetching, isFetchNextPageError, fetchNextPage, search]);
 
+  const selectSort = (field: MarketSort) => {
+    setDirection(sort === field && direction === "desc" ? "asc" : "desc");
+    setSort(field);
+  };
+  const sortHeader = (field: MarketSort, label: string, optional = false) => (
+    <th
+      className={optional ? "optional-col" : undefined}
+      aria-sort={sort === field ? (direction === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        className="market-sort-button"
+        onClick={() => selectSort(field)}
+        title={field === "volume24h" ? "Sort all markets by 24-hour volume" : "Sort loaded tokens"}
+        aria-label={`Sort by ${label}`}
+      >
+        {label}
+        {sort === field &&
+          (direction === "desc" ? <ArrowDownIcon aria-hidden="true" /> : <ArrowUpIcon aria-hidden="true" />)}
+      </button>
+    </th>
+  );
+
   return (
     <div className="studio-page explore-page">
       <PoolMetrics />
-      <div className="explore-title-row">
-        <div>
-          <h1>Explore crypto</h1>
-          <p>Discover the market. Find your next perspective.</p>
-        </div>
-        <Link href="/earn" className="btn explore-earn-link">
-          Earn with WETH / USDX ↗
-        </Link>
-      </div>
-      <div className="market-toolbar">
-        <span className="crypto-filter">
-          Cryptocurrencies <span>{assets.length ?? "—"}</span>
-        </span>
+      <div className="market-toolbar tokens-toolbar">
+        <h1>Tokens</h1>
         <div className="market-toolbar-actions">
           <label className="input market-search">
             <MagnifyingGlassIcon className="h-4 w-4" />
             <input
-              aria-label="Search cryptocurrencies"
+              aria-label="Search loaded tokens"
               value={search}
               placeholder="Search tokens"
-              onChange={e => {
-                setSearch(e.target.value);
-              }}
+              onChange={e => setSearch(e.target.value)}
             />
           </label>
-          <select
-            className="select sort-select"
-            aria-label="Sort tokens"
-            value={sort}
-            onChange={e => {
-              setSort(e.target.value);
-            }}
-          >
-            <option value="cap">Market cap</option>
-            <option value="volume">24h volume</option>
-            <option value="change">Top gainers</option>
-          </select>
           <button
             type="button"
             className="btn btn-ghost btn-circle"
-            aria-label="Refresh cryptocurrencies"
+            aria-label="Refresh tokens"
             disabled={markets.isFetching}
             onClick={() => void markets.refetch()}
           >
@@ -88,11 +83,21 @@ export default function ExplorePage() {
           </button>
         </div>
       </div>
+      {locallySorted && (
+        <p className="market-sort-scope" role="status">
+          Sorting loaded tokens. Load more to expand the comparison.
+        </p>
+      )}
+      {search && (
+        <p className="market-sort-scope" role="status">
+          Searching loaded tokens.
+        </p>
+      )}
       {(markets.isError || markets.data?.pages.some(page => page.stale)) && (
         <DataError
           message={
             markets.data
-              ? "Showing the last available market snapshot. Refresh is delayed."
+              ? "Showing the last available market snapshot. Refresh to reload the list."
               : "Market data is temporarily unavailable."
           }
           retry={() => void markets.refetch()}
@@ -102,20 +107,29 @@ export default function ExplorePage() {
         <table className="table token-market-table">
           <thead>
             <tr>
-              <th className="rank-col">#</th>
-              <th>Token</th>
-              <th>Price</th>
-              <th className="optional-col">1H</th>
-              <th>1D</th>
-              <th className="optional-col">FDV</th>
-              <th className="optional-col">24h volume</th>
+              <th>
+                <button
+                  className="market-sort-button"
+                  onClick={() => {
+                    setSort("marketCap");
+                    setDirection("desc");
+                  }}
+                  title="Reset to market-cap order"
+                >
+                  Token
+                </button>
+              </th>
+              {sortHeader("price", "Price")}
+              {sortHeader("change1h", "1H", true)}
+              {sortHeader("change24h", "1D")}
+              {sortHeader("fdv", "FDV", true)}
+              {sortHeader("volume24h", "Volume (24H)", true)}
               <th className="spark-col">7D chart</th>
             </tr>
           </thead>
           <tbody>
             {assets.map(a => (
               <tr key={a.id}>
-                <td className="rank-col">{a.rank}</td>
                 <td>
                   <Link className="market-token-link" href={`/explore/${a.id}`}>
                     <AssetIcon asset={a} />
@@ -144,7 +158,7 @@ export default function ExplorePage() {
         {markets.isPending && (
           <div className="token-list-loading">
             <span className="loading loading-spinner" />
-            Loading cryptocurrency markets…
+            Loading tokens…
           </div>
         )}
         {!markets.isPending && !markets.isError && !assets.length && (
@@ -155,7 +169,11 @@ export default function ExplorePage() {
         {isFetchingNextPage ? (
           <span className="loading loading-spinner" aria-label="Loading more tokens" />
         ) : hasNextPage ? (
-          <button className="btn btn-ghost" onClick={() => void fetchNextPage()}>
+          <button
+            className="btn btn-ghost"
+            disabled={isFetching}
+            onClick={() => void fetchNextPage({ cancelRefetch: false })}
+          >
             {isFetchNextPageError ? "Retry loading more tokens" : "Load more tokens"}
           </button>
         ) : markets.data ? (

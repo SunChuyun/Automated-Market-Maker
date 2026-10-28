@@ -39,6 +39,8 @@ export const CHART_RANGES = ["1H", "1D", "1W", "1M", "1Y"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
 
 const instrumentIds = new Set([
+  "figure-heloc",
+  "hashnote-usyc",
   "tether-gold",
   "pax-gold",
   "kinesis-gold",
@@ -50,7 +52,7 @@ const instrumentIds = new Set([
 ]);
 export const isCryptoAsset = (id: string, name: string) =>
   !instrumentIds.has(id) &&
-  !/\b(?:xstock|etf|tokenized stock|tokenized equity|tokenized gold|tokenized silver)\b/i.test(name);
+  !/\b(?:xstock|etf|fund|tokenized stock|tokenized equity|tokenized gold|tokenized silver)\b/i.test(name);
 export const finiteNumber = (value: unknown): number | null =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 export const safeExternalUrl = (value: unknown): string | null => {

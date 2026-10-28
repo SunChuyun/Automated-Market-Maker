@@ -8,7 +8,7 @@ import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 import { useMarket } from "~~/hooks/useMarket";
 
 export default function PortfolioPage() {
-  const { address, chainId } = useAccount();
+  const { address, chainId, connector } = useAccount();
   const market = useMarket();
   const { targetNetwork } = useTargetNetwork();
   const correctNetwork = chainId === targetNetwork.id;
@@ -24,7 +24,7 @@ export default function PortfolioPage() {
           <WalletIcon className="h-6 w-6" />
         </span>
         <div>
-          <div className="eyebrow">CONNECTED ACCOUNT</div>
+          <div className="eyebrow">{address ? `CONNECTED · ${connector?.name ?? "Wallet"}` : "YOUR ACCOUNT"}</div>
           {address ? <Address address={address} chain={targetNetwork} /> : <h2>Connect a wallet to get started</h2>}
           <p className="muted">
             Use the wallet button above to connect, disconnect, or manage the active account in your wallet.

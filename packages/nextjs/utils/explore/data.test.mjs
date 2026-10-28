@@ -13,6 +13,8 @@ test("crypto list excludes tokenized commodity and stock instruments", () => {
   assert.equal(isCryptoAsset("pax-gold", "Pax Gold"), false);
   assert.equal(isCryptoAsset("example", "Example xStock"), false);
   assert.equal(isCryptoAsset("example", "Example ETF"), false);
+  assert.equal(isCryptoAsset("figure-heloc", "Figure Heloc"), false);
+  assert.equal(isCryptoAsset("example", "Treasury Securities Fund"), false);
 });
 test("missing values remain distinct from a genuine zero price", () => {
   assert.equal(tokenPrice(null), "—");

@@ -279,12 +279,7 @@ export function MarketPanel() {
         />
       )}
       <div className="market-source">
-        <span>
-          {market.data
-            ? `Retrieved ${new Date(market.data.retrievedAt).toLocaleTimeString("en-US")}`
-            : "Public market data"}{" "}
-          · Refreshes every 30s
-        </span>
+        <span>Public market reference</span>
         <span>Chart: Kraken · Completed hourly candles</span>
       </div>
       {market.isError && (

@@ -156,12 +156,12 @@ body {
     sans-serif;
   font-size: 16px;
   color: var(--studio-text);
-  background: #fff;
+  background: var(--studio-bg);
   -webkit-font-smoothing: antialiased;
 }
 :root,
 [data-theme="light"] {
-  background: #fff;
+  background: var(--studio-bg);
 }
 button,
 input,
@@ -302,7 +302,7 @@ svg[tabindex]:focus-visible {
 .more-navigation .dropdown-content {
   top: calc(100% - 7px);
   right: 0;
-  background: white;
+  background: var(--studio-bg);
   border: 1px solid var(--studio-border);
   box-shadow: 0 8px 30px #17192c12;
   padding: 8px;
@@ -378,7 +378,7 @@ svg[tabindex]:focus-visible {
 }
 .studio-card {
   display: block;
-  background: #fff;
+  background: var(--studio-bg);
   border: 1px solid var(--studio-border);
   padding: 28px;
   border-radius: 22px;
@@ -488,7 +488,7 @@ svg[tabindex]:focus-visible {
 }
 .token-pair .token + .token {
   margin-left: -10px;
-  border: 2px solid white;
+  border: 2px solid var(--studio-bg);
 }
 .pair-title {
   display: flex;
@@ -572,7 +572,7 @@ svg[tabindex]:focus-visible {
 }
 .token-selector {
   border: 1px solid var(--studio-border);
-  background: #fff;
+  background: var(--studio-bg);
   border-radius: 30px;
   padding: 6px 12px 6px 6px;
   display: flex;
@@ -594,7 +594,7 @@ svg[tabindex]:focus-visible {
   height: 36px;
   width: 36px;
   min-height: 36px;
-  border: 4px solid white;
+  border: 4px solid var(--studio-bg);
   background: var(--studio-surface);
   border-radius: 12px;
   color: var(--studio-muted);
@@ -661,7 +661,7 @@ svg[tabindex]:focus-visible {
 .settings-panel .btn {
   font-size: 13px;
   min-height: 32px;
-  background: white;
+  background: var(--studio-bg);
   border-color: var(--studio-border);
 }
 .trade-disclosure,
@@ -691,7 +691,7 @@ svg[tabindex]:focus-visible {
 .review-modal {
   border-radius: 24px;
   padding: 28px;
-  background: #fff;
+  background: var(--studio-bg);
   width: 450px;
 }
 .review-amount {
@@ -803,7 +803,7 @@ svg[tabindex]:focus-visible {
   width: 210px;
   padding: 0 12px;
   border: 1px solid var(--studio-border);
-  background: white;
+  background: var(--studio-bg);
   box-shadow: none;
   color: var(--studio-muted);
   border-radius: 12px;
@@ -818,7 +818,7 @@ svg[tabindex]:focus-visible {
   height: 42px;
   min-height: 42px;
   width: 148px;
-  background: white;
+  background: var(--studio-bg);
   border: 1px solid var(--studio-border);
   border-radius: 12px;
   font-size: 14px;
@@ -849,7 +849,6 @@ svg[tabindex]:focus-visible {
 .token-market-table th:last-child {
   border-radius: 0 12px 12px 0;
 }
-.token-market-table th:nth-child(2),
 .token-market-table th:first-child {
   text-align: left;
 }
@@ -868,9 +867,6 @@ svg[tabindex]:focus-visible {
   text-align: left;
   color: var(--studio-muted);
   font-size: 13px;
-}
-.token-market-table td:nth-child(2) {
-  text-align: left;
 }
 .token-market-table .price-cell {
   color: var(--studio-text);
@@ -1143,7 +1139,7 @@ svg[tabindex]:focus-visible {
 }
 .token-trade-panel {
   display: block;
-  background: #fff;
+  background: var(--studio-bg);
   border: 1px solid var(--studio-border);
   border-radius: 23px;
   padding: 23px;
@@ -1383,7 +1379,7 @@ svg[tabindex]:focus-visible {
 }
 .apr-inputs .unit-input {
   margin-top: 10px;
-  background: white;
+  background: var(--studio-bg);
 }
 .apr-inputs .unit-input .input {
   font-size: 20px;
@@ -1398,7 +1394,7 @@ svg[tabindex]:focus-visible {
   font-size: 13px;
 }
 .apr-tier .select {
-  background: white;
+  background: var(--studio-bg);
   border-color: var(--studio-border);
   font-size: 13px;
   height: 40px;
@@ -1445,7 +1441,7 @@ svg[tabindex]:focus-visible {
   white-space: nowrap;
 }
 .studio-tabs .tab-active {
-  background: white;
+  background: var(--studio-bg);
   color: var(--studio-muted);
   box-shadow: 0 1px 4px #cbd7ed55;
 }
@@ -2599,4 +2595,32 @@ body {
   .header-actions {
     gap: 7px;
   }
+}
+
+.tokens-toolbar h1 {
+  font-size: 32px;
+  font-weight: 550;
+  letter-spacing: -1px;
+  margin: 0;
+  color: var(--studio-text);
+}
+.market-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+  white-space: nowrap;
+  padding: 5px 0;
+}
+.market-sort-button:hover {
+  color: var(--studio-text);
+}
+.market-sort-button svg {
+  height: 14px;
+  width: 14px;
+}
+.market-sort-scope {
+  color: var(--studio-muted);
+  font-size: 13px;
+  margin: -8px 0 16px;
 }

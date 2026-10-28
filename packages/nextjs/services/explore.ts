@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import "server-only";
 import {
   type ChartPoint,
@@ -10,6 +11,7 @@ import {
   isCryptoAsset,
   safeExternalUrl,
 } from "~~/utils/explore/data";
+import { type BatchState, MARKET_ORDERS, type MarketOrder, nextDistinctBatch } from "~~/utils/explore/pagination";
 
 type Cached = { value: { retrievedAt: string }; expires: number };
 const cache = new Map<string, Cached>();
@@ -75,10 +77,11 @@ function normalizeAsset(row: any): CryptoAsset {
 }
 
 const assetCache = new Map<string, { asset: CryptoAsset; expires: number }>();
-async function marketBatch(page: number) {
-  const result = await cached(`markets:${page}`, 60_000, async () => {
+async function marketBatch(page: number, order: MarketOrder) {
+  if (page > 500) throw new Error("Provider pagination limit reached");
+  const result = await cached(`markets:${order}:${page}`, 60_000, async () => {
     const rows = await request(
-      `coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`,
+      `coins/markets?vs_currency=usd&order=${order}&per_page=250&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`,
     );
     if (!Array.isArray(rows)) throw new Error("Invalid market list");
     return {
@@ -98,32 +101,76 @@ async function marketBatch(page: number) {
   result.assets.forEach(asset => assetCache.set(asset.id, { asset, expires: Date.parse(result.retrievedAt) + 60_000 }));
   return result;
 }
-export async function getTokenMarkets(cursor = "1:0"): Promise<TokenMarkets> {
-  const match = /^(\d{1,3}):(\d{1,3})$/.exec(cursor);
-  if (!match || Number(match[1]) < 1 || Number(match[1]) > 500 || Number(match[2]) > 250)
-    throw new RangeError("Invalid market cursor");
-  let page = Number(match[1]),
-    offset = Number(match[2]);
-  const assets: CryptoAsset[] = [];
-  let done = false,
-    stale = false,
-    retrievedAt = "";
-  for (let attempt = 0; attempt < 3 && assets.length < 100 && !done; attempt++) {
-    const batch = await marketBatch(page);
-    retrievedAt = batch.retrievedAt;
-    stale ||= Boolean(batch.stale);
-    const take = batch.assets.slice(offset, offset + 100 - assets.length);
-    assets.push(...take);
-    offset += take.length;
-    if (offset >= batch.assets.length) {
-      done = batch.complete;
-      if (!done) {
-        page++;
-        offset = 0;
-      }
-    }
+type MarketSession = {
+  order: MarketOrder;
+  state: BatchState<CryptoAsset>;
+  pages: TokenMarkets[];
+  expires: number;
+};
+const sessions = new Map<string, MarketSession>();
+const pageOperations = new Map<string, Promise<TokenMarkets>>();
+
+async function sessionPage(id: string, index: number, order: MarketOrder): Promise<TokenMarkets> {
+  const session = sessions.get(id);
+  if (!session || session.expires < Date.now() || session.order !== order)
+    throw new RangeError("Market list expired. Refresh tokens to continue.");
+  if (session.pages[index]) return session.pages[index];
+  if (index !== session.pages.length) throw new RangeError("Invalid market cursor");
+  const operationKey = `${id}:${index}`;
+  const previous = pageOperations.get(operationKey);
+  if (previous) return previous;
+  const operation = (async () => {
+    // Commit cursor state only after a complete response; a provider failure must be retryable.
+    const state = { ...session.state, buffer: [...session.state.buffer], seen: new Set(session.state.seen) };
+    let stale = false;
+    const assets = await nextDistinctBatch(state, async page => {
+      const batch = await marketBatch(page, order);
+      stale ||= Boolean(batch.stale);
+      return batch;
+    });
+    const result: TokenMarkets = {
+      assets,
+      source: "CoinGecko",
+      retrievedAt: new Date().toISOString(),
+      stale,
+      nextCursor: state.complete && !state.buffer.length ? null : `${id}:${index + 1}`,
+    };
+    session.state = state;
+    session.pages.push(result);
+    return result;
+  })().finally(() => pageOperations.delete(operationKey));
+  pageOperations.set(operationKey, operation);
+  return operation;
+}
+
+export async function getTokenMarkets(
+  cursor: string | null = null,
+  order: MarketOrder = "market_cap_desc",
+): Promise<TokenMarkets> {
+  if (!MARKET_ORDERS.includes(order)) throw new RangeError("Invalid market order");
+  if (cursor) {
+    const match = /^([a-f0-9-]{36}):(\d{1,4})$/.exec(cursor);
+    if (!match) throw new RangeError("Invalid market cursor");
+    return sessionPage(match[1], Number(match[2]), order);
   }
-  return { assets, source: "CoinGecko", retrievedAt, stale, nextCursor: done ? null : `${page}:${offset}` };
+  const first = await cached(`market-start:${order}`, 60_000, async () => {
+    for (const [id, session] of sessions) if (session.expires < Date.now()) sessions.delete(id);
+    if (sessions.size >= 64) throw new Error("Market sessions are busy. Retry shortly.");
+    const id = randomUUID();
+    sessions.set(id, {
+      order,
+      state: { sourcePage: 1, buffer: [], seen: new Set(), complete: false },
+      pages: [],
+      expires: Date.now() + 30 * 60_000,
+    });
+    try {
+      return await sessionPage(id, 0, order);
+    } catch (error) {
+      sessions.delete(id);
+      throw error;
+    }
+  });
+  return first;
 }
 export async function getKnownAsset(id: string): Promise<CryptoAsset | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(id)) return null;
