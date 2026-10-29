@@ -1,15 +1,23 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { Address, Balance } from "@scaffold-ui/components";
 import { useAccount } from "wagmi";
 import { CheckIcon, ClockIcon, WalletIcon } from "@heroicons/react/24/outline";
 import { Metric, Note, PageHeading, PairTitle } from "~~/components/amm/Studio";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 import { useMarket } from "~~/hooks/useMarket";
+import { usePaperAccount } from "~~/hooks/usePaperAccount";
+import { number } from "~~/utils/amm/model";
 
 export default function PortfolioPage() {
   const { address, chainId, connector } = useAccount();
   const market = useMarket();
+  const { account: paper, scope } = usePaperAccount();
+  const [activity, setActivity] = useState("paper");
+  const share = paper.shares / paper.totalShares;
+  const reference = paper.poolUsdx / paper.poolWeth;
   const { targetNetwork } = useTargetNetwork();
   const correctNetwork = chainId === targetNetwork.id;
   return (
@@ -103,15 +111,117 @@ export default function PortfolioPage() {
           </p>
         </section>
       </div>
+      <section className="card studio-card mt-6 paper-portfolio">
+        <div className="section-head">
+          <div>
+            <div className="eyebrow">PRACTICE ACCOUNT</div>
+            <h2>Paper positions</h2>
+          </div>
+          <span className="badge simulation-badge">Virtual assets · {scope}</span>
+        </div>
+        <div className="metrics-grid three">
+          <Metric
+            label="Paper wallet"
+            value={`${number(paper.weth, 4)} WETH`}
+            detail={`${number(paper.usdx)} USDX available`}
+          />
+          <Metric
+            label="Paper LP shares"
+            value={number(paper.shares, 6)}
+            detail={`${number(share * 100, 3)}% of the paper pool`}
+          />
+          <Metric
+            label="Redeemable paper position"
+            value={`${number(share * (paper.poolUsdx + paper.poolWeth * reference))} USDX`}
+            detail="Valued at paper pool spot; fees remain in reserves"
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="table studio-table">
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Underlying WETH</th>
+                <th>Underlying USDX</th>
+                <th>Management</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>WETH / USDX · Full range</td>
+                <td>{number(share * paper.poolWeth, 6)}</td>
+                <td>{number(share * paper.poolUsdx)}</td>
+                <td>
+                  <Link className="text-link" href="/simulate">
+                    Manage paper liquidity →
+                  </Link>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="form-caption">
+          Separate from your connected wallet. No on-chain assets or income are represented by these paper balances.
+          Entry cost and fee-only attribution await a reconciled accounting model.
+        </p>
+      </section>
       <section className="card studio-card mt-6">
         <div className="section-head">
-          <h2>On-chain activity</h2>
-          <span className="muted">Swaps · Approvals · Liquidity</span>
+          <h2>History & activity</h2>
+          <div className="tabs studio-tabs" role="tablist" aria-label="Activity source">
+            {["paper", "chain"].map(id => (
+              <button
+                role="tab"
+                aria-selected={activity === id}
+                className={`tab ${activity === id ? "tab-active" : ""}`}
+                key={id}
+                onClick={() => setActivity(id)}
+              >
+                {id === "paper" ? "Paper activity" : "On-chain activity"}
+              </button>
+            ))}
+          </div>
         </div>
-        <p className="body-copy">
-          No AMM activity is available yet. Confirmed transactions and explorer links will appear here after contract
-          integration. Virtual trades stay in the simulator.
-        </p>
+        {activity === "chain" ? (
+          <p className="body-copy">
+            Confirmed swaps, approvals, deposits and withdrawals will appear here after contract integration, with
+            status, amounts, fees and explorer links.
+          </p>
+        ) : paper.events.length ? (
+          <div className="overflow-x-auto">
+            <table className="table studio-table">
+              <thead>
+                <tr>
+                  <th>Time (UTC)</th>
+                  <th>Action</th>
+                  <th>WETH change</th>
+                  <th>USDX change</th>
+                  <th>LP shares</th>
+                  <th>Trading fee (USDX)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paper.events.slice(0, 50).map(e => (
+                  <tr key={e.id}>
+                    <td>{new Date(e.time).toISOString().slice(0, 19).replace("T", " ")}</td>
+                    <td>{e.action}</td>
+                    <td>{number(e.weth, 6)}</td>
+                    <td>{number(e.usdx)}</td>
+                    <td>{number(e.shares, 6)}</td>
+                    <td>{number(e.feeUsdx, 4)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="form-caption">
+              Latest 50 actions. Up to 500 retained in this browser for this account and network.
+            </p>
+          </div>
+        ) : (
+          <p className="body-copy">
+            No paper actions yet. Make a swap or add paper liquidity in Simulation to populate this history.
+          </p>
+        )}
       </section>
     </div>
   );

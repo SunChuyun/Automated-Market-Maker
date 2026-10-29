@@ -7,7 +7,6 @@ export const Footer = () => (
     </span>
     <div>
       <Link href="/portfolio">Project status</Link>
-      <Link href="/debug">Contract tools ↗</Link>
       <a href="https://github.com/SunChuyun/Automated-Market-Maker" target="_blank" rel="noreferrer">
         GitHub ↗
       </a>

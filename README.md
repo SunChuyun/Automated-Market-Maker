@@ -6,7 +6,7 @@ A course project for NYU FRE-GY 6931 Blockchain and Cryptocurrency: a WETH/USDX 
 
 The repository has been initialized from the official **Scaffold-ETH 2 Hardhat template**, generated with `create-eth@2.0.23`. The first commit contains the unmodified generated template. Project setup and documentation follow separately.
 
-The frontend now includes an English UI preview with Swap, Explore, token detail, Earn, Portfolio, and research tools, wallet controls, live external ETH/USD references, virtual trading, and a reference-market DCA backtest. The starter `YourContract`, Debug Contracts, and local explorer remain available as development tools. The AMM, USDX, LP token, oracle rules, and Sepolia integration are still pending. There is no public website deployment yet.
+The frontend now includes an English UI preview with Swap, Explore, token detail, Earn, Portfolio, and research tools, wallet controls, live external ETH/USD references, virtual trading, and a configurable reference-market strategy backtest. The starter `YourContract`, Debug Contracts, and local explorer remain available as development tools. The AMM, USDX, LP token, oracle rules, and Sepolia integration are still pending. There is no public website deployment yet.
 
 | Route                                  | Current behavior                                                                                                     |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
@@ -16,9 +16,25 @@ The frontend now includes an English UI preview with Swap, Explore, token detail
 | `/earn`                                | WETH/USDX liquidity preview and an explicitly illustrative fee-APR calculator. `/pools` redirects here.              |
 | `/simulate`, `/backtest`, `/portfolio` | Simulation and Backtest under More; Portfolio in the primary navigation with the connected wallet name.              |
 
-Real swaps, limit orders and liquidity actions are disabled until the corresponding contracts or execution services are connected. Assets in Explore are for market research; the planned pool supports WETH/USDX only. Example amounts are not on-chain balances. The reference backtest omits gas, spread and pool price impact; it does not replace the final pool model or Sepolia reconciliation.
+Real swaps, limit orders and liquidity actions are disabled until the corresponding contracts or execution services are connected. Assets in Explore are for market research; the planned pool supports WETH/USDX only. Example amounts are not on-chain balances. The research backtest includes configurable fees, adverse slippage and gas, but does not replay AMM reserves or replace the final pool model and Sepolia reconciliation.
 
 System, Light and Dark settings persist across reloads. Chrome verification confirmed an existing MetaMask connection, readable light/dark surfaces, and 100 → 200 → 300 distinct rows through bottom-triggered scrolling. No wallet signature or transaction was performed. Project-level About navigation has been removed; token-specific About information remains.
+
+## Local location and disk usage
+
+The complete project folder can be moved, for example to `~/Desktop/Automated-Market-Maker`. Moving it together with `.git` preserves branches, history and the GitHub remote. Open the new location in your editor and run commands from that directory. Restart the website after a move. The project does not require a fixed absolute filesystem path. `.next` is generated build/dev output and can be rebuilt. `node_modules` contains installed runtime/tool dependencies, not just cache; after removing it, run `./yarn install --immutable` before starting again. Neither directory belongs in Git. Keep the existing Yarn linker for compatibility; do not change package managers solely to hide the dependency folder.
+
+## Risk and research workspaces
+
+- **Simulation:** paper swaps linked to before/after reserve curves and value-weighted asset distribution. Review output, fee split, price impact and minimum received before a second confirmation. Manual oracle stress tests use a 90-minute feed age and 30-minute TWAP warm-up. The dynamic-fee trigger of 1% is illustrative and requires team validation. Paper fills do not model gas, MEV or external arbitrage.
+- **LP risk:** fee-free impermanent loss, holding comparison, assumed volume/horizon, LP fees, gas and protocol revenue. A separate concentrated-range inventory study shows one-sided exposure outside the range. It does not enable concentrated liquidity in the existing constant-product contract and is not a stop-loss.
+- **Portfolio:** the central place for wallet balances, future on-chain LP shares and activity, and separately labeled paper balances, redeemable underlying assets and paper activity. Paper data is stored only in this browser, scoped to the configured network and active address (or guest), with up to 500 retained actions. Earn remains the deposit/withdrawal entry point; real execution is pending.
+- **Pool arbitrage:** default research mode, calculated entirely in the browser using a synthetic example or an imported local `timestamp,price` CSV (3–5,000 rows, maximum 1 MB). No upload, market API or strategy backend is used in this mode. Quotes include constant-product impact, pool fees, external venue fees/slippage and gas; orders are capped by cash and the configured order limit. The external leg assumes the same assets can settle at the reference venue and 1 USDX = 1 USD. USDX currently has no external market or redemption, so these are scenario opportunities, not executable cross-venue alerts. Competition, latency, failed transactions, bridging and depeg are excluded. Historical reference prices alone do not establish the actual pool reserve path.
+- **Indicator strategies:** five presets (SMA, EMA, RSI, Bollinger breakout, MACD) plus editable, restricted indicator expressions. A parser evaluates the expressions in the off-chain TypeScript engine without `eval`, arbitrary JavaScript or Python execution. Parameters are edited in function arguments. Python notebooks can reconcile the results; arbitrary Python would require a separate isolated worker.
+- **Research data:** `/api/backtest/candles` fetches public [Coinbase Exchange OHLCV](https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/products/get-product-candles). Frequencies: 1 minute, 5 minutes, hourly, daily, and complete UTC months aggregated from daily bars. At most 6,000 source bars per run including warm-up; each upstream request stays below 300 bars. Missing bars fail the run rather than receiving invented prices. Source data is cached for five minutes; public request limits still apply.
+- **Execution and reports:** signals use the previous completed bar and fill at the next open; final positions liquidate at the last completed close. Costs are applied to both strategy and buy-and-hold. Both cumulative-return curves begin at 0% before the first fill. Reports include annualized Sharpe (zero risk-free rate, 365-day market), volatility, return, drawdown and recovery duration, win rate, profit factor, exposure, costs, complete paginated trades, and CSV exports of all trades and bar-level positions. Undefined ratios display a dash. The last report is saved locally by address/network. Edited controls do not silently change an existing report.
+
+These are reference-market research tools, not verified AMM execution. Historical ETH prices cannot establish our pool's volume or LP fee revenue. Live pool positions and activity require deployed ABIs/addresses and confirmed event indexing. Source code is English. Debug Contracts remains accessible at `/debug` for developers and is absent from product navigation.
 
 ## Quick start
 
@@ -92,7 +108,7 @@ Our own pool analytics are a separate future data path: index confirmed `Swap`/l
 ./yarn hardhat:check-types
 ./yarn next:check-types
 ./yarn next:build
-./yarn workspace @se-2/nextjs exec node --experimental-strip-types --test utils/amm/model.test.mjs utils/explore/data.test.mjs utils/explore/pagination.test.mjs
+./yarn workspace @se-2/nextjs exec node --experimental-strip-types --test utils/amm/model.test.mjs utils/amm/risk.test.mjs utils/research/engine.test.mjs utils/research/pool.test.mjs utils/explore/data.test.mjs utils/explore/pagination.test.mjs
 ```
 
 Deployment-helper dependencies are pinned to a compatible Rocketh family. Keep `yarn.lock` under version control and review dependency changes with the team. The CI workflow checks the starter contracts and types. Local verification does not imply that remote CI has passed.

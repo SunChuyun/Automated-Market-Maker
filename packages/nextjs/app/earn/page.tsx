@@ -235,7 +235,17 @@ export default function EarnPage() {
             </>
           )}
           <PendingButton>Pool contract pending</PendingButton>
-          <p className="functional-note">Deposits and withdrawals are not connected yet.</p>
+          <p className="functional-note">
+            Deposits and withdrawals are not connected yet. Your resulting LP shares, redeemable assets and activity
+            will appear in{" "}
+            <Link className="text-link" href="/portfolio">
+              Portfolio
+            </Link>
+            .
+          </p>
+          <Link className="text-link" href="/simulate">
+            Practice a deposit in Simulation →
+          </Link>
           <details className="earn-disclosure">
             <summary>Example amounts & risks</summary>
             <p>
