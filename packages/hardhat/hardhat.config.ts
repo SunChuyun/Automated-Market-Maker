@@ -2,6 +2,7 @@ import "dotenv/config";
 import { defineConfig, overrideTask } from "hardhat/config";
 import hardhatToolbox from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import HardhatDeploy from "hardhat-deploy";
+import { existsSync } from "node:fs";
 import generateTsAbis from "./scripts/generateTsAbis.js";
 
 // If not set, it uses the hardhat account 0 private key.
@@ -20,6 +21,12 @@ const deployTasks = [
     .setInlineAction(async (args, _hre, runSuper) => {
       // Run the original deploy task
       await runSuper(args);
+      // Hardhat's in-memory network does not persist deployment JSON. The
+      // frontend ABI generator expects that folder; skip it for this dry run.
+      if (!existsSync("./deployments")) {
+        console.log("Local deployment rehearsal finished (no persisted deployments to export).");
+        return;
+      }
       // Force run the generateTsAbis script
       await generateTsAbis();
     })
