@@ -1,0 +1,152 @@
+{
+  "address": "0xbba20f70ad1f980e9462879d66d4e3cbd72fe974",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_priceFeed",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_maxAge",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "getEthUsdPrice18",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEthUsdPriceWithStatus18",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "maxAge",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "priceFeed",
+      "outputs": [
+        {
+          "internalType": "contract IAggregatorV3",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "contractName": "PriceOracle",
+  "sourceName": "contracts/PriceOracle.sol",
+  "bytecode": "0x60c060405234801561000f575f5ffd5b5060405161078338038061078383398101604081905261002e916100d5565b6001600160a01b03821661007e5760405162461bcd60e51b8152602060048201526012602482015271125b9d985b1a59081c1c9a58d9481999595960721b60448201526064015b60405180910390fd5b5f81116100bf5760405162461bcd60e51b815260206004820152600f60248201526e496e76616c6964206d61782061676560881b6044820152606401610075565b6001600160a01b0390911660805260a05261010c565b5f5f604083850312156100e6575f5ffd5b82516001600160a01b03811681146100fc575f5ffd5b6020939093015192949293505050565b60805160a0516106436101405f395f8181605301526103d001525f8181608d0152818161014c015261027401526106435ff3fe608060405234801561000f575f5ffd5b506004361061004a575f3560e01c8063687043c51461004e578063741bef1a14610088578063e96f49c6146100c7578063eb5460e3146100cf575b5f5ffd5b6100757f000000000000000000000000000000000000000000000000000000000000000081565b6040519081526020015b60405180910390f35b6100af7f000000000000000000000000000000000000000000000000000000000000000081565b6040516001600160a01b03909116815260200161007f565b6100756100ec565b6100d7610148565b6040805192835290151560208301520161007f565b5f5f5f6100f7610148565b91509150806101425760405162461bcd60e51b81526020600482015260126024820152715374616c65206f7261636c6520707269636560701b60448201526064015b60405180910390fd5b50919050565b5f5f7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa9250505080156101c4575060408051601f3d908101601f191682019092526101c19181019061042b565b60015b6101d057505f91829150565b5f84136102165760405162461bcd60e51b8152602060048201526014602482015273496e76616c6964206f7261636c6520707269636560601b6044820152606401610139565b5f821180156102255750428211155b6102715760405162461bcd60e51b815260206004820152601860248201527f496e76616c6964206f7261636c652074696d657374616d7000000000000000006044820152606401610139565b5f7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa9250505080156102ec575060408051601f3d908101601f191682019092526102e991810190610479565b60015b6102ff57505f9788975095505050505050565b905060128160ff1611156103555760405162461bcd60e51b815260206004820152601b60248201527f556e737570706f72746564206f7261636c6520646563696d616c7300000000006044820152606401610139565b5f6103618260126104b4565b61036c90600a6105b6565b9050610379815f196105c4565b8611156103c05760405162461bcd60e51b81526020600482015260156024820152744f7261636c65207072696365206f766572666c6f7760581b6044820152606401610139565b5f6103cb82886105e3565b90505f7f00000000000000000000000000000000000000000000000000000000000000006103f987426105fa565b929c9211159a509098505050505050505050565b805169ffffffffffffffffffff81168114610426575f5ffd5b919050565b5f5f5f5f5f60a0868803121561043f575f5ffd5b6104488661040d565b6020870151604088015160608901519297509095509350915061046d6080870161040d565b90509295509295909350565b5f60208284031215610489575f5ffd5b815160ff81168114610499575f5ffd5b9392505050565b634e487b7160e01b5f52601160045260245ffd5b60ff82811682821603908111156104cd576104cd6104a0565b92915050565b6001815b600184111561050e578085048111156104f2576104f26104a0565b600184161561050057908102905b60019390931c9280026104d7565b935093915050565b5f82610524575060016104cd565b8161053057505f6104cd565b816001811461054657600281146105505761056c565b60019150506104cd565b60ff841115610561576105616104a0565b50506001821b6104cd565b5060208310610133831016604e8410600b841016171561058f575081810a6104cd565b61059b5f1984846104d3565b805f19048211156105ae576105ae6104a0565b029392505050565b5f61049960ff841683610516565b5f826105de57634e487b7160e01b5f52601260045260245ffd5b500490565b80820281158282048414176104cd576104cd6104a0565b818103818111156104cd576104cd6104a056fea2646970667358221220d1666101149b23950837471437cb67de406ddf62ae72db45533371c6e7960c6364736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b506004361061004a575f3560e01c8063687043c51461004e578063741bef1a14610088578063e96f49c6146100c7578063eb5460e3146100cf575b5f5ffd5b6100757f000000000000000000000000000000000000000000000000000000000000000081565b6040519081526020015b60405180910390f35b6100af7f000000000000000000000000000000000000000000000000000000000000000081565b6040516001600160a01b03909116815260200161007f565b6100756100ec565b6100d7610148565b6040805192835290151560208301520161007f565b5f5f5f6100f7610148565b91509150806101425760405162461bcd60e51b81526020600482015260126024820152715374616c65206f7261636c6520707269636560701b60448201526064015b60405180910390fd5b50919050565b5f5f7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa9250505080156101c4575060408051601f3d908101601f191682019092526101c19181019061042b565b60015b6101d057505f91829150565b5f84136102165760405162461bcd60e51b8152602060048201526014602482015273496e76616c6964206f7261636c6520707269636560601b6044820152606401610139565b5f821180156102255750428211155b6102715760405162461bcd60e51b815260206004820152601860248201527f496e76616c6964206f7261636c652074696d657374616d7000000000000000006044820152606401610139565b5f7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa9250505080156102ec575060408051601f3d908101601f191682019092526102e991810190610479565b60015b6102ff57505f9788975095505050505050565b905060128160ff1611156103555760405162461bcd60e51b815260206004820152601b60248201527f556e737570706f72746564206f7261636c6520646563696d616c7300000000006044820152606401610139565b5f6103618260126104b4565b61036c90600a6105b6565b9050610379815f196105c4565b8611156103c05760405162461bcd60e51b81526020600482015260156024820152744f7261636c65207072696365206f766572666c6f7760581b6044820152606401610139565b5f6103cb82886105e3565b90505f7f00000000000000000000000000000000000000000000000000000000000000006103f987426105fa565b929c9211159a509098505050505050505050565b805169ffffffffffffffffffff81168114610426575f5ffd5b919050565b5f5f5f5f5f60a0868803121561043f575f5ffd5b6104488661040d565b6020870151604088015160608901519297509095509350915061046d6080870161040d565b90509295509295909350565b5f60208284031215610489575f5ffd5b815160ff81168114610499575f5ffd5b9392505050565b634e487b7160e01b5f52601160045260245ffd5b60ff82811682821603908111156104cd576104cd6104a0565b92915050565b6001815b600184111561050e578085048111156104f2576104f26104a0565b600184161561050057908102905b60019390931c9280026104d7565b935093915050565b5f82610524575060016104cd565b8161053057505f6104cd565b816001811461054657600281146105505761056c565b60019150506104cd565b60ff841115610561576105616104a0565b50506001821b6104cd565b5060208310610133831016604e8410600b841016171561058f575081810a6104cd565b61059b5f1984846104d3565b805f19048211156105ae576105ae6104a0565b029392505050565b5f61049960ff841683610516565b5f826105de57634e487b7160e01b5f52601260045260245ffd5b500490565b80820281158282048414176104cd576104cd6104a0565b818103818111156104cd576104cd6104a056fea2646970667358221220d1666101149b23950837471437cb67de406ddf62ae72db45533371c6e7960c6364736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {
+    "15580": [
+      {
+        "length": 32,
+        "start": 141
+      },
+      {
+        "length": 32,
+        "start": 332
+      },
+      {
+        "length": 32,
+        "start": 628
+      }
+    ],
+    "15582": [
+      {
+        "length": 32,
+        "start": 83
+      },
+      {
+        "length": 32,
+        "start": 976
+      }
+    ]
+  },
+  "inputSourceName": "project/contracts/PriceOracle.sol",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "320600",
+        "executionCost": "infinite",
+        "totalCost": "infinite"
+      },
+      "external": {
+        "getEthUsdPrice18()": "infinite",
+        "getEthUsdPriceWithStatus18()": "infinite",
+        "maxAge()": "infinite",
+        "priceFeed()": "infinite"
+      }
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_priceFeed\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_maxAge\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"getEthUsdPrice18\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getEthUsdPriceWithStatus18\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"maxAge\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"priceFeed\",\"outputs\":[{\"internalType\":\"contract IAggregatorV3\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project/contracts/PriceOracle.sol\":\"PriceOracle\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\"project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.7.0/\",\"project/:hardhat/=npm/hardhat@3.20.0/\"]},\"sources\":{\"project/contracts/PriceOracle.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\n// Minimal Chainlink-compatible interface\\ninterface IAggregatorV3 {\\n    function decimals() external view returns (uint8);\\n\\n    function latestRoundData()\\n        external\\n        view\\n        returns (\\n            uint80 roundId,\\n            int256 answer,\\n            uint256 startedAt,\\n            uint256 updatedAt,\\n            uint80 answeredInRound\\n        );\\n}\\n\\ncontract PriceOracle {\\n    IAggregatorV3 public immutable priceFeed;\\n\\n    // Maximum allowed age of the oracle price\\n    uint256 public immutable maxAge;\\n\\n    constructor(address _priceFeed, uint256 _maxAge) {\\n        require(_priceFeed != address(0), \\\"Invalid price feed\\\");\\n        require(_maxAge > 0, \\\"Invalid max age\\\");\\n\\n        priceFeed = IAggregatorV3(_priceFeed);\\n        maxAge = _maxAge;\\n    }\\n\\n    // Strict read for finalizing initial configuration and price comparisons.\\n    function getEthUsdPrice18() external view returns (uint256) {\\n        (uint256 price18, bool fresh) = getEthUsdPriceWithStatus18();\\n        require(fresh, \\\"Stale oracle price\\\");\\n        return price18;\\n    }\\n\\n    // A stale / temporarily unavailable feed is not a malformed feed.\\n    // Report stale/unavailable as fresh=false so AMMPool can trade using\\n    // spot-vs-TWAP. Malformed returned data must still fail closed.\\n    function getEthUsdPriceWithStatus18() public view returns (uint256, bool) {\\n        try priceFeed.latestRoundData() returns (\\n            uint80,\\n            int256 answer,\\n            uint256,\\n            uint256 updatedAt,\\n            uint80\\n        ) {\\n            require(answer > 0, \\\"Invalid oracle price\\\");\\n            require(updatedAt > 0 && updatedAt <= block.timestamp, \\\"Invalid oracle timestamp\\\");\\n\\n            uint8 feedDecimals;\\n            try priceFeed.decimals() returns (uint8 decimals_) {\\n                feedDecimals = decimals_;\\n            } catch {\\n                return (0, false);\\n            }\\n            require(feedDecimals <= 18, \\\"Unsupported oracle decimals\\\");\\n\\n            // Guard multiplication overflow even on unexpected mock feeds.\\n            uint256 factor = 10 ** (18 - feedDecimals);\\n            require(uint256(answer) <= type(uint256).max / factor, \\\"Oracle price overflow\\\");\\n            uint256 price18 = uint256(answer) * factor;\\n            bool fresh = block.timestamp - updatedAt <= maxAge;\\n            return (price18, fresh);\\n        } catch {\\n            // Chainlink call reverted (RPC/feed temporarily unavailable).\\n            return (0, false);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0xa0ef44c3b16d994dd4aa8ed8e09cb49a849b7378ae4b2a44af92b28f02e36296\",\"license\":\"MIT\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "argsData": "0x000000000000000000000000694aa1769357215de4fac081bf1f309adc3253060000000000000000000000000000000000000000000000000000000000001518",
+  "transaction": {
+    "hash": "0x99aa8a87cba2d383102528e7512a017f5dd2d97f1181573101f3b9d2a7f9d996",
+    "nonce": "0x9",
+    "origin": "0xe076d9e004ca38abca0453ba2347085f07bf82ea"
+  },
+  "receipt": {
+    "blockHash": "0x412985012a3cf134ed3cf376035efa578f4285101ef64d500c2ec50ac9b508fd",
+    "blockNumber": "0xb78eaa",
+    "transactionIndex": "0x0"
+  }
+}
