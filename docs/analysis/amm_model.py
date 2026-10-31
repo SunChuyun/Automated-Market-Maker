@@ -112,7 +112,8 @@ def impermanent_loss_closed_form(r: float) -> float:
     return 2 * math.sqrt(r) / (1 + r) - 1
 
 
-def arbitrage_trade(reserve_usdx: int, reserve_weth: int, target_price: float, fee_bps: int = 0):
+def arbitrage_trade(reserve_usdx: int, reserve_weth: int, target_price: float, fee_bps: int = 0,
+                    extra_cost: float = 0.0):
     """Trade an arbitrageur sends to move the pool spot to the external price.
 
     Returns (direction, amount_in). direction is "usdx_in" (buy WETH from the pool),
@@ -123,16 +124,21 @@ def arbitrage_trade(reserve_usdx: int, reserve_weth: int, target_price: float, f
     (x + gamma*a)^2 / (gamma*x*y) USDX per WETH. Arbitrage stops where that equals the external
     price P, so a = (sqrt(gamma*k*P) - x) / gamma. The sell side is symmetric. With f = 0 this is
     the familiar x' = sqrt(k*P).
+
+    extra_cost is the arbitrageur's cost outside the pool (venue fee, slippage) as a fraction of
+    the external leg. It widens the no-trade band: the trade stops where the pool's marginal
+    price equals P*(1 - extra_cost) instead of P, while the pool itself still charges fee_bps.
     """
     gamma = (BPS - fee_bps) / BPS
+    gamma_t = gamma * (1 - extra_cost)
     x, y = reserve_usdx, reserve_weth
     k = x * y
     spot = x / y
-    if target_price > spot / gamma:
-        new_x = math.sqrt(gamma * k * target_price)
+    if target_price > spot / gamma_t:
+        new_x = math.sqrt(gamma_t * k * target_price)
         return "usdx_in", int((new_x - x) / gamma)
-    if target_price < spot * gamma:
-        new_y = math.sqrt(gamma * k / target_price)
+    if target_price < spot * gamma_t:
+        new_y = math.sqrt(gamma_t * k / target_price)
         return "weth_in", int((new_y - y) / gamma)
     return None, 0
 
@@ -267,11 +273,22 @@ class Twap:
         return total / weight if weight else None
 
 
-def select_fee_bps(spot: float, twap, trigger: float = 0.01, base: int = BASE_FEE_BPS, high: int = HIGH_FEE_BPS) -> int:
-    """Dynamic tier: the high fee applies while |spot / TWAP - 1| exceeds the trigger."""
+def select_fee_bps(spot: float, twap, trigger: float = 0.01, base: int = BASE_FEE_BPS, high: int = HIGH_FEE_BPS,
+                   reference=None, reference_trigger=None) -> int:
+    """Dynamic tier as in AMMPool.getDynamicFeeStatus.
+
+    Before the TWAP window has filled the base fee applies and no oracle is read. Afterwards the
+    high fee applies if |spot / TWAP - 1| >= trigger, or if a fresh Chainlink reference is given
+    and |TWAP / reference - 1| >= reference_trigger. Pass reference=None for a stale feed
+    (the contract then falls back to the spot/TWAP signal alone).
+    """
     if twap is None:
         return base
-    return high if abs(spot / twap - 1) > trigger else base
+    if abs(spot / twap - 1) >= trigger:
+        return high
+    if reference is not None and reference_trigger is not None and abs(twap / reference - 1) >= reference_trigger:
+        return high
+    return base
 
 
 # ---------------------------------------------------------------------------
@@ -307,6 +324,8 @@ class SimConfig:
     demand_drop_at_high_fee: float = 0.0  # share of retail trades skipped while the high tier is active
     arb_enabled: bool = True
     tier_on_post_trade: bool = False  # choose the tier from the spot the trade would leave, not the pre-trade spot
+    chainlink_trigger: float | None = 0.01  # |TWAP/Chainlink - 1| that also selects the high tier; None = signal off
+    arb_extra_cost: float = 0.0  # arbitrageur's cost outside the pool (venue fee + slippage), fraction
 
 
 def simulate(prices, pool: Pool, cfg: SimConfig, seed: int = 1):
@@ -331,8 +350,13 @@ def simulate(prices, pool: Pool, cfg: SimConfig, seed: int = 1):
     for i, p in enumerate(prices):
         t = i * cfg.step_s
 
+        def tier(spot_for_tier):
+            return select_fee_bps(spot_for_tier, twap.value(t), cfg.trigger,
+                                  reference=p if cfg.chainlink_trigger is not None else None,
+                                  reference_trigger=cfg.chainlink_trigger)
+
         def active_fee():
-            return select_fee_bps(pool.spot(), twap.value(t), cfg.trigger) if cfg.dynamic_fee else BASE_FEE_BPS
+            return tier(pool.spot()) if cfg.dynamic_fee else BASE_FEE_BPS
 
         fee = active_fee()
         high_now = fee == HIGH_FEE_BPS
@@ -340,9 +364,9 @@ def simulate(prices, pool: Pool, cfg: SimConfig, seed: int = 1):
         if cfg.arb_enabled:
             if cfg.dynamic_fee and cfg.tier_on_post_trade:
                 # an arbitrage trade leaves the pool at the external price, so judge the tier from p
-                fee = select_fee_bps(p, twap.value(t), cfg.trigger)
+                fee = tier(p)
                 high_now = fee == HIGH_FEE_BPS
-            d, amount = arbitrage_trade(pool.reserve_usdx, pool.reserve_weth, p, fee)
+            d, amount = arbitrage_trade(pool.reserve_usdx, pool.reserve_weth, p, fee, cfg.arb_extra_cost)
             if d == "usdx_in" and amount > 0:
                 pool.swap_usdx_in(amount, fee, PROTOCOL_FEE_BPS)
                 arb_volume = from_wei(amount)
@@ -361,7 +385,7 @@ def simulate(prices, pool: Pool, cfg: SimConfig, seed: int = 1):
                 else:
                     r0 = swap(to_wei(retail_size / p), pool.reserve_weth, pool.reserve_usdx, BASE_FEE_BPS, PROTOCOL_FEE_BPS)
                     spot_after = r0.new_reserve_out / r0.new_reserve_in
-                fee = select_fee_bps(spot_after, twap.value(t), cfg.trigger)
+                fee = tier(spot_after)
             skipped = fee == HIGH_FEE_BPS and rng.random() < cfg.demand_drop_at_high_fee
             if not skipped:
                 if direction_buy:
